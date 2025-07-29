@@ -13,24 +13,26 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class PersonalTaskManagerViolations {
+public class PersonalTaskManagerKISS {
 
-    private static final String DB_FILE_PATH = "tasks_database.json";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String DB_FILE_PATH = "tasks_database.json";
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    // Phương thức trợ giúp để tải dữ liệu (sẽ được gọi lặp lại)
-    private static JSONArray loadTasksFromDb() {
-        JSONParser parser = new JSONParser();
-        try (FileReader reader = new FileReader(DB_FILE_PATH)) {
-            Object obj = parser.parse(reader);
-            if (obj instanceof JSONArray) {
-                return (JSONArray) obj;
-            }
-        } catch (IOException | ParseException e) {
-            System.err.println("Lỗi khi đọc file database: " + e.getMessage());
-        }
-        return new JSONArray();
-    }
+    public JSONObject addTask(String title, String description, String dueDateStr, String priority) {
+        if (!isValidInput(title, dueDateStr, priority)) return null;
+
+        JSONArray tasks = loadTasks();
+        if (isDuplicate(tasks, title, dueDateStr)) {
+            System.out.println("Lỗi: Nhiệm vụ đã tồn tại.");
+            return null;
+        }
+
+        JSONObject task = createTask(title, description, dueDateStr, priority);
+        tasks.add(task);
+        saveTasks(tasks);
+        System.out.println("Đã thêm nhiệm vụ mới: " + task.get("id"));
+        return task;
+    }
 
     // Phương thức trợ giúp để lưu dữ liệu
     private static void saveTasksToDb(JSONArray tasksData) {
